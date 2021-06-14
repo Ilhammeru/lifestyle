@@ -1,0 +1,286 @@
+
+    <script src="<?=base_url();?>assets/vendor/chartjs/chart.min.js"></script>
+
+    <div class="row">
+
+        <div class="col-sm-6">
+
+            <div class="card">
+
+                <div class="card-body">
+
+                    <table id="table-attend" class="table table-striped m-0 table-sm" style="width: 100%">
+
+                        <thead>
+                            <tr class="text-center">
+                                <th>Nama</th>
+                                <th>Department</th>
+                                <th>IN</th>
+                                <th>OUT</th>
+                                <th>Durasi</th>
+                                <th>Ketertarikan</th>
+                                <th>Kepuasan</th>
+                            </tr>
+                        </thead>
+
+                        <tbody>
+
+                            <?php
+
+                            $review_in = 0;
+                            $review_out = 0;
+                            $review_diff = 0;
+                            $count_in = 0;
+                            $count_out = 0;
+                            $count_dur = 0;
+
+                            $review_in_p = 0;
+                            $review_in_w = 0;
+                            $review_out_p = 0;
+                            $review_out_w = 0;
+                            $count_in_p = 0;
+                            $count_in_w = 0;
+                            $count_out_p = 0;
+                            $count_out_w = 0;
+
+                            $count_all_p = 0;
+                            $count_visit_p = 0;
+                            $count_all_w = 0;
+                            $count_visit_w = 0;
+
+                            foreach ($attend as $row) :
+
+                                if ($row->gender == 'p') {
+                                    $count_all_p += 1;
+                                } else {
+                                    $count_all_w += 1;
+                                }
+
+                                echo '<tr>';
+                                echo '<td>' . $row->employee_name . '</td>';
+
+                                echo '<td class="text-center">';
+                                if ($row->team == '') {
+                                echo $row->department;
+                                } else {
+                                echo $row->department . ' (' . $row->team . ')';
+                                }
+                                echo '</td>';
+                                
+                                echo '<td class="text-center">';
+                                if ($row->time_in == NULL) {
+                                    echo '-';
+                                } else {
+                                    echo date('H:i', strtotime($row->time_in));
+                                    $count_in += 1;
+                                    $review_in += $row->review_in;
+                                    if ($row->gender == 'p') {
+                                        $count_in_p += 1;
+                                        $review_in_p += $row->review_in;
+                                        $count_visit_p += 1;
+                                    } else {
+                                        $count_in_w += 1;
+                                        $review_in_w += $row->review_in;
+                                        $count_visit_w += 1;
+                                    }
+                                }
+                                echo '</td>';
+
+                                if ($row->time_out == NULL) {
+                                    echo '<td class="text-center">-</td>';
+                                } else {
+                                    if (date('Y-m-d', strtotime($row->time_out)) != $row->event_date) {
+                                        echo '<td class="bg-yellow"></td>';
+                                    } else {
+                                        echo '<td class="text-center">' . date('H:i', strtotime($row->time_out)) . '</td>';
+                                    }
+                                    $count_out += 1;
+                                    $review_out += $row->review_out;
+                                    if ($row->gender == 'p') {
+                                        $count_out_p += 1;
+                                        $review_out_p += $row->review_out;
+                                    } else {
+                                        $count_out_w += 1;
+                                        $review_out_w += $row->review_out;
+                                    }
+                                }
+                                
+                                if ($row->time_in == NULL || $row->time_out == NULL) {
+                                    echo '<td class="text-center">-</td>';
+                                } else {
+
+                                    if (date('Y-m-d', strtotime($row->time_out)) != $row->event_date) {
+                                        echo '<td class="bg-yellow"></td>';
+                                    } else {
+                                        if ($row->time_diff == NULL) {
+                                            echo '<td class="text-center">-</td>';
+                                        } else {
+                                            echo '<td class="text-center">' . date('H:i', strtotime($row->time_diff)) . '</td>';
+                                            $review_diff += strtotime($row->time_diff);
+                                            $count_dur += 1;
+                                        }
+                                    }
+                                }
+                                echo '</td>';
+
+                                echo '<td class="text-center">' . $row->review_in . '</td>';
+                                echo '<td class="text-center">' . $row->review_out . '</td>';
+
+                                echo '</tr>';
+                            endforeach;
+
+                                echo '<tr>';
+                                echo '<td></td>';
+                                echo '<td></td>';
+                                echo '<td></td>';
+                                echo '<td></td>';
+                                echo '<th class="text-center">' . date('H:i', round($review_diff/$count_dur)) . '</th>';
+                                echo '<th class="text-center">' . round($review_in/$count_in, 2) . '</th>';
+                                echo '<th class="text-center">' . round($review_out/$count_out, 2) . '</th>';
+                                echo '</tr>';
+                                ?>
+
+                        </tbody>
+
+                    </table>
+
+                </div>
+
+            </div>
+
+        </div>
+
+        <div class="col-sm-6">
+
+            <!-- BAR CHART -->
+            <div class="card">
+                <div class="card-header border-0">
+                    <div class="d-flex justify-content-between">
+                        <h3 class="card-title"></h3>
+
+                        <div class="card-tools">
+                            <button type="button" class="btn btn-tool" data-card-widget="collapse"><i class="fas fa-minus"></i></button>
+                            <button type="button" class="btn btn-tool" data-card-widget="remove"><i class="fas fa-times"></i></button>
+                        </div>
+                    </div>
+                </div>
+                <div class="card-body">
+                    <div class="chart">
+                        <canvas id="barChart" style="min-height: 250px; height: 250px; max-height: 250px; max-width: 100%;"></canvas>
+                    </div>
+                </div>
+                <!-- /.card-body -->
+            </div>
+
+        </div>
+
+    </div>
+
+    <script>
+
+        $(document).ready( function () {
+
+            var titleExport = 'Absen Event ';
+
+            $('#table-attend').DataTable({
+                paging: false,
+                info: false,
+                ordering: false,
+                scrollY: '700px',
+                scrollX: '1200px',
+                scrollCollapse: true,
+                searching: false,
+                fixedColumns:   {
+                    leftColumns: 1
+                },
+                // Buttons          
+                buttons: [ 
+                            {
+                                extend: 'excel',
+                                title: titleExport,
+                                orientation: 'landscape'
+                            },
+                            {
+                                extend: 'pdf',
+                                title: titleExport,
+                                orientation: 'landscape'
+                            },
+                            {
+                                extend: 'print',
+                                title: titleExport,
+                                orientation: 'landscape'
+                            }
+                        ],
+                dom: 'Bfrtip'
+            });
+
+            var review_in_p = "<?php echo round($review_in_p/$count_in_p, 2);?>";
+            var review_in_w = "<?php echo round($review_in_w/$count_in_w, 2);?>";
+            var review_out_p = "<?php echo round($review_out_p/$count_out_p, 2);?>";
+            var review_out_w = "<?php echo round($review_out_w/$count_out_w, 2);?>";
+
+            var count_visit_p = "<?php echo round($count_visit_p/$count_all_p, 2) * 100;?>";
+            var count_visit_w = "<?php echo round($count_visit_w/$count_all_w, 2) * 100;?>";
+
+            var areaChartData = {
+                labels  : ['Keikutsertaan', 'Ketertarikan', 'Kepuasan'],
+                datasets: [
+                    {
+                        label               : 'Pria',              
+                        backgroundColor     : '#007bff',
+                        borderColor         : '#007bff',
+                        data                : [count_visit_p, review_in_p, review_out_p]
+                    },
+                    {
+                        label               : 'Wanita',
+                        backgroundColor     : '#ced4da',
+                        borderColor         : '#ced4da',
+                        data                : [count_visit_w, review_in_w, review_out_w]
+                    }
+                ]
+            }
+
+            //-------------
+            //- BAR CHART -
+            //-------------
+            var barChartCanvas = $('#barChart').get(0).getContext('2d');
+            var barChartData = jQuery.extend(true, {}, areaChartData);
+            var temp0 = areaChartData.datasets[0];
+            var temp1 = areaChartData.datasets[1];
+            barChartData.datasets[0] = temp0;
+            barChartData.datasets[1] = temp1;
+
+            var barChartOptions = {
+                responsive              : true,
+                maintainAspectRatio     : false,
+                datasetFill             : false,
+                scales: { 
+                    yAxes: [{
+                            display: true,
+                            ticks: {
+                                beginAtZero: true,
+                                steps: 10,
+                                stepValue: 5,
+                                max: 100
+                            },
+                            gridLines: {
+                                drawBorder: false,
+                                display      : true,
+                                lineWidth    : '4px',
+                                color        : 'rgba(0, 0, 0, .2)',
+                                zeroLineColor: 'transparent'
+                            }
+                        }]
+                },
+            }
+
+            var barChart = new Chart(barChartCanvas, {
+                type: 'bar', 
+                data: barChartData,
+                options: barChartOptions
+            });
+
+
+        });
+
+    </script>
